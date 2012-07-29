@@ -292,6 +292,7 @@ if (typeof ReturnValue !== "undefined") {
 
 // long stack traces
 
+exports.formatStackTrace = formatStackTrace;
 function formatStackTrace(error, frames) {
     var lines = [];
     try {
