@@ -95,34 +95,6 @@
 "use strict";
 
 
-// discover own file name and line number range for filtering stack
-// traces
-var qFileName, qStartingLine, qEndingLine;
-var captureLine = function(objectWithStack){
-  if (Error.captureStackTrace) {
-    var fileName, lineNumber;
-
-    var oldPrepareStackTrace = Error.prepareStackTrace;
-
-    Error.prepareStackTrace = function (error, frames) {
-      fileName = frames[0].getFileName();
-      lineNumber = frames[0].getLineNumber();
-    };
-
-    // teases call of temporary prepareStackTrace
-    // JSHint and Closure Compiler generate known warnings here
-    /*jshint expr: true */
-    objectWithStack.stack;
-
-    Error.prepareStackTrace = oldPrepareStackTrace;
-    qFileName = fileName;
-    if (qStartingLine){
-      qEndingLine = lineNumber;
-    } else {
-      qStartingLine = lineNumber;
-    }
-  }
-}
 // All code after this point will be filtered from stack traces.
 captureLine(new Error);
 
@@ -381,11 +353,11 @@ function formatSourcePosition(frame) {
     return line;
 }
 
-function isInternalFrame(fileName, frame){
-  if (fileName !== qFileName)
-    return false;
-  var line = frame.getLineNumber();
-  return line >= qStartingLine && line <= qEndingLine;
+function isInternalFrame(fileName, frame) {
+    if (fileName !== qFileName)
+        return false;
+    var line = frame.getLineNumber();
+    return line >= qStartingLine && line <= qEndingLine;
 }
 
 /*
@@ -418,6 +390,35 @@ function getStackFrames(objectWithStack) {
     Error.prepareStackTrace = oldPrepareStackTrace;
 
     return stack;
+}
+
+// discover own file name and line number range for filtering stack
+// traces
+var qFileName, qStartingLine, qEndingLine;
+function captureLine(objectWithStack) {
+    if (Error.captureStackTrace) {
+        var fileName, lineNumber;
+
+        var oldPrepareStackTrace = Error.prepareStackTrace;
+
+        Error.prepareStackTrace = function (error, frames) {
+            fileName = frames[0].getFileName();
+            lineNumber = frames[0].getLineNumber();
+        };
+
+        // teases call of temporary prepareStackTrace
+        // JSHint and Closure Compiler generate known warnings here
+        /*jshint expr: true */
+        objectWithStack.stack;
+
+        Error.prepareStackTrace = oldPrepareStackTrace;
+        qFileName = fileName;
+        if (qStartingLine){
+            qEndingLine = lineNumber;
+        } else {
+            qStartingLine = lineNumber;
+        }
+    }
 }
 
 function deprecate(fn, name, alternative){
