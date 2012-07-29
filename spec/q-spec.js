@@ -1059,7 +1059,6 @@ describe("possible regressions", function () {
             // why we check for "Script error." Because of this restriction,
             // the test will always pass on the local file system :(.
             if (!messageRegExp.test(message) && message !== "Script error.") {
-                console.dir(message);
                 onBadMessage(new Error(
                     "Error was thrown when calling .end(): " + message
                 ));
@@ -1107,6 +1106,23 @@ describe("possible regressions", function () {
             Q.delay(10).then(deferred.resolve);
 
             return deferred.promise;
+        });
+    });
+
+    describe("gh-75", function () {
+        it("does not double-resolve misbehaved promises", function () {
+            var badPromise = Q.makePromise({
+                post: function () { return "hello"; }
+            });
+
+            var resolutions = 0;
+            function onResolution() {
+                ++resolutions;
+            }
+
+            return Q.when(badPromise, onResolution, onResolution).then(function () {
+                expect(resolutions).toBe(1);
+            });
         });
     });
 
